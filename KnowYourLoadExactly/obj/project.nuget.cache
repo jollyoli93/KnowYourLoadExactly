@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "v5bFgdcMxyA=",
+  "dgSpecHash": "32NA2HnIBuw=",
   "success": true,
   "projectFilePath": "/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/jackoliver/.nuget/packages/opencvsharp4/4.11.0.20250507/opencvsharp4.4.11.0.20250507.nupkg.sha512",
+    "/Users/jackoliver/.nuget/packages/system.memory/4.6.3/system.memory.4.6.3.nupkg.sha512"
+  ],
   "logs": []
 }

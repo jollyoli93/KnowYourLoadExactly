@@ -43,6 +43,12 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
+          "dependencies": {
+            "OpenCvSharp4": {
+              "target": "Package",
+              "version": "[4.11.0.20250507, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

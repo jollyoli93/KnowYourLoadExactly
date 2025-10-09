@@ -1,0 +1,16 @@
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/bin/Debug/net9.0/KnowYourLoadExactly
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/bin/Debug/net9.0/KnowYourLoadExactly.deps.json
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/bin/Debug/net9.0/KnowYourLoadExactly.runtimeconfig.json
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/bin/Debug/net9.0/KnowYourLoadExactly.dll
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/bin/Debug/net9.0/KnowYourLoadExactly.pdb
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.AssemblyInfoInputs.cache
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.AssemblyInfo.cs
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.csproj.CoreCompileInputs.cache
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.sourcelink.json
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.dll
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/refint/KnowYourLoadExactly.dll
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.pdb
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.genruntimeconfig.cache
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/ref/KnowYourLoadExactly.dll
+/Users/jackoliver/Documents/Documents/C#_projects/KnowYourLoadExactly/KnowYourLoadExactly/KnowYourLoadExactly/obj/Debug/net9.0/KnowYourLoadExactly.csproj.AssemblyReference.cache
