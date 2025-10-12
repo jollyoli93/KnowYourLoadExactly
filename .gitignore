@@ -1,0 +1,24 @@
+# Ignore images/videos folders anywhere
+**/test_images/
+**/images/
+
+# Ignore image files globally
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+
+# Build output
+bin/
+obj/
+
+# OS files
+.DS_Store
+
+# Large models
+*.onnx
+*.pt
+*.dll
+*.so
+*.exe
