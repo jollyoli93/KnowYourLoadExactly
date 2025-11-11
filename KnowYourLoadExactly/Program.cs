@@ -1,12 +1,8 @@
-﻿using System.Drawing;
-using System.Drawing.Drawing2D;
-using SkiaSharp;
-using YoloDotNet;
+﻿using SkiaSharp;
 using YoloDotNet.Enums;
 using YoloDotNet.Models;
 using YoloDotNet.Extensions;
 using YoloDotNet.Core;
-using Microsoft.ML.OnnxRuntime;
 using KnowYourLoadExactlyCSharp.Utils;
 using KnowYourLoadExactlyCSharp.Crane_Load_Detector;
 
