@@ -1,6 +1,7 @@
 # Ignore images/videos folders anywhere
 **/test_images/
 **/images/
+**/.venv
 
 # Ignore image files globally
 *.jpg
