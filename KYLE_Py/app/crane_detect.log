@@ -1,0 +1,15 @@
+2025-11-12 22:40:50,254 Model loaded successfully!
+2025-11-12 22:40:52,097 Running image 0
+2025-11-12 22:40:52,156 Start of box predict
+2025-11-12 22:40:52,157 No hook captured, running 0
+2025-11-12 22:40:52,788 End of box
+2025-11-12 22:40:52,789 End of result
+2025-11-12 22:40:52,789 Running image 1
+2025-11-12 22:40:52,795 Start of box predict
+2025-11-12 22:40:52,796 No hook captured, running 0
+2025-11-12 22:40:53,127 End of box
+2025-11-12 22:40:53,128 Start of box predict
+2025-11-12 22:40:53,129 Load crop found, running 1
+2025-11-12 22:40:53,556 End of box
+2025-11-12 22:40:53,557 End of result
+2025-11-12 22:40:53,567 End.

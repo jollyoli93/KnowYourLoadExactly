@@ -10,6 +10,7 @@
 *.gif
 *.bmp
 
+
 # Build output
 bin/
 obj/
@@ -23,3 +24,4 @@ obj/
 *.dll
 *.so
 *.exe
+*.pth
