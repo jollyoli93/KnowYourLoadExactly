@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import torch
 import logging
+import albumentations as A
 
 logging.basicConfig(filename="crane_detect.log",
                     format='%(asctime)s %(message)s',
@@ -89,10 +90,6 @@ def crop_load(img, x, y, w, h):
   cropped_img = crop_img[y:y+h,x:x+w]
 
   return cropped_img
-
-import torch
-import albumentations as A
-import numpy as np
 
 checkpoint = torch.load('./crane_models/crane_classifier.pth', map_location='cpu', weights_only=False)
 
