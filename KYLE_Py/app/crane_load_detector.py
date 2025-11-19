@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import torch
 import albumentations as A
+import image_tools
 from pathlib import Path
 
 
@@ -46,12 +47,12 @@ class KYLE:
         # -------------------------------
         # Load Crop Regression Model
         # -------------------------------
-        self.cropPredict = LinearRegression(14, 2, 512)
+        self.crop_predict = LinearRegression(14, 2, 512)
         state = torch.load("./crane_models/LoadRegressionDims.pth",
                            map_location="cpu",
                            weights_only=True)
-        self.cropPredict.load_state_dict(state)
-        self.cropPredict.eval()
+        self.crop_predict.load_state_dict(state)
+        self.crop_predict.eval()
 
         # -------------------------------
         # Load Classifier
@@ -82,37 +83,6 @@ class KYLE:
                         std=(0.229, 0.224, 0.225),
                         max_pixel_value=255.0),
         ])
-
-    # ----------------------------------------------------------------------
-    # Prediction modules
-    # ----------------------------------------------------------------------
-    def predict_load_crop(self, hook_coords, img_size, dims):
-        img_width = img_size[1]
-        img_height = img_size[0]
-
-        xn = dims[0] / img_width
-        yn = dims[1] / img_height
-        width_n = dims[2] / img_width
-        height_n = dims[3] / img_height
-        area = width_n * height_n
-        ratio = width_n / height_n
-
-        input_feats = torch.concat((
-            hook_coords,
-            torch.tensor([width_n, height_n, area, ratio, xn, yn])
-        ), dim=0)
-
-        pred = self.cropPredict(input_feats)
-        img_dims = torch.tensor([img_width, img_height])
-        xtens, ytens = pred * img_dims
-
-        xc, yc = int(xtens), int(ytens)
-        w, h = int(img_width * 0.07), int(img_height * 0.07)
-
-        yt = yc - (h // 2)
-        xt = xc - (w // 2)
-
-        return xt, yt, w, h
 
     def crop_load(self, img, x, y, w, h):
         return img[y:y+h, x:x+w]
@@ -165,7 +135,7 @@ class KYLE:
                     coords = box.xyxyxyxyn[0].flatten()
                     dims = box.xywhr[0]
 
-                    xt, yt, w, h = self.predict_load_crop(coords, box.orig_shape, dims)
+                    xt, yt, w, h = image_tools.predict_load_crop(coords, box.orig_shape, dims, self.crop_predict)
 
                     crop = self.crop_load(img, xt, yt, w, h)
                     pred_class, confidence = self.predict_one_image(crop)
