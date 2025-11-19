@@ -31,63 +31,77 @@ class KYLE:
 
     # YOLO detection
     def detect(self, results, image):
-        for idx, result in enumerate(results):
-            # img = cv2.imread(image[idx]) stream
+      load_results = []
+      
+      for idx, result in enumerate(results):
+          img = None
+          if (type(image) is not list):
             img = cv2.imread(image)
-            boxes = result.obb.cpu()
+          else: #is array(list) - issue may result if the stream isnt a list
+            img = cv2.imread(image[idx])  
+            
+          image_results = {}  
+          
+          boxes = result.obb.cpu()
+          for box in boxes:
+              r = box.xyxy[0].numpy().astype(int)
+              class_id = int(box.cls[0])
+              class_name = self.yolo_model.names[class_id]
+              conf = float(box.conf[0])
 
-            for box in boxes:
-                r = box.xyxy[0].numpy().astype(int)
-                class_id = int(box.cls[0])
-                class_name = self.yolo_model.names[class_id]
-                conf = float(box.conf[0])
+              print(f"Class: {class_name}, Box: {r}")
 
-                print(f"Class: {class_name}, Box: {r}")
+              # -----------------------------------
+              # HOOK (class 0)
+              # -----------------------------------
+              if class_id == 0:
+                  coords = box.xyxyxyxyn[0].flatten()
+                  dims = box.xywhr[0]
 
-                # -----------------------------------
-                # HOOK (class 0)
-                # -----------------------------------
-                if class_id == 0:
-                    coords = box.xyxyxyxyn[0].flatten()
-                    dims = box.xywhr[0]
+                  xt, yt, w, h = self.crop_predict.predict_load_crop(coords, box.orig_shape, dims)
 
-                    xt, yt, w, h = self.crop_predict.predict_load_crop(coords, box.orig_shape, dims)
+                  crop = self.crop_load(img, xt, yt, w, h)
+                  pred_class, confidence = self.classify_model.predict_one_image(crop)
+                  image_results[pred_class] = [confidence, xt, yt, w, h]
+                  
+                  # DEBUG STEPS
+                  print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
+                  cv2.rectangle(img, (xt, yt), (xt+w, yt+h), (0, 255, 0), 2)
+                  cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                              (xt, yt - 5),
+                              cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-                    crop = self.crop_load(img, xt, yt, w, h)
-                    pred_class, confidence = self.classify_model.predict_one_image(crop)
+                  cv_show("Hook", img)
 
-                    print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
+              # -----------------------------------
+              # LOAD (class 1)
+              # -----------------------------------
+              elif class_id == 1:
+                  xt, yt, xb, yb = r
+                  w, h = box.xywhr.numpy()[0].astype(int)[2:4]
 
-                    cv2.rectangle(img, (xt, yt), (xt+w, yt+h), (0, 255, 0), 2)
-                    cv2.putText(img, f"{pred_class}: {confidence:.2f}",
-                                (xt, yt - 5),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                  crop = self.crop_load(img, xt, yt, w, h)
+                  pred_class, confidence = self.classify_model.predict_one_image(crop)
 
-                    cv_show("Hook", img)
+                  image_results[pred_class] = [confidence, xt, yt, w, h]
 
-                # -----------------------------------
-                # LOAD (class 1)
-                # -----------------------------------
-                elif class_id == 1:
-                    xt, yt, xb, yb = r
-                    w, h = box.xywhr.numpy()[0].astype(int)[2:4]
+                  # DEBUG Steps
+                  print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
+                  cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2)
+                  cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                              (xt, yt - 5),
+                              cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-                    crop = self.crop_load(img, xt, yt, w, h)
-                    pred_class, confidence = self.classify_model.predict_one_image(crop)
-
-                    print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
-
-                    cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2)
-                    cv2.putText(img, f"{pred_class}: {confidence:.2f}",
-                                (xt, yt - 5),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-                    cv_show("Load", img)
+                  cv_show("Load", img)
+                  
+          load_results.append(image_results)
+      return load_results
 
     #Run inference on one image
     def detect_image(self, image):
-        results = self.yolo_model.predict(image, stream=False)
-        self.detect(results, image)
+        yolo_results = self.yolo_model.predict(image, stream=False)
+        crop_results = self.detect(yolo_results, image)
+        print(crop_results)
 
     #Run inference on bulk images - upload array of images.
     def detect_stream(self, stream):
