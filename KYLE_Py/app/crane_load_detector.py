@@ -1,12 +1,11 @@
 from ultralytics import YOLO
 import cv2
-import numpy as np
 import torch
-import albumentations as A
 import image_tools
 from pathlib import Path
 
 from Models.Load_Predict import Load_Predict
+from Models.Load_Classify import Load_Classify
 
 
 def cv_show(name, image):
@@ -17,78 +16,20 @@ def cv_show(name, image):
 class KYLE:
 
     def __init__(self, yolo_weights):
-
-        # -------------------------------
         # YOLO
-        # -------------------------------
         self.weights = yolo_weights
         self.yolo_model = YOLO(self.weights)
         
-        # -------------------------------
-        # Load Crop Regression Model
-        # -------------------------------
-        self.crop_predict = Load_Predict("./Models/crane_models/LoadRegressionDims.pth")
+        # Load Crop finder Regression Model
+        self.crop_predict = Load_Predict("./Models/crane_models/LoadRegressionDims.pth") #remove hardcoded path
 
-        # -------------------------------
         # Load Classifier
-        # -------------------------------
-        checkpoint = torch.load(
-            "./Models/crane_models/crane_classifier.pth",
-            map_location='cpu',
-            weights_only=False
-        )
-
-        self.class_model = checkpoint["model"]
-        self.class_model.eval()
-
-        if torch.cuda.is_available():
-            self.class_model.cuda()
-
-        self.cls_names = checkpoint["cls_names"]
-        self.cls_index = checkpoint["cls_index"]
-
-        print("Model loaded successfully!")
-
-        # -------------------------------
-        # Albumentations transform
-        # -------------------------------
-        self.val_transforms = A.Compose([
-            A.Resize(height=240, width=240),
-            A.Normalize(mean=(0.485, 0.456, 0.406),
-                        std=(0.229, 0.224, 0.225),
-                        max_pixel_value=255.0),
-        ])
+        self.classify_model = Load_Classify()
 
     def crop_load(self, img, x, y, w, h):
         return img[y:y+h, x:x+w]
 
-    # ----------------------------------------------------------------------
-    # Classifier wrapper
-    # ----------------------------------------------------------------------
-    def predict_one_image(self, image_array):
-        model = self.class_model
-        transforms = self.val_transforms
-
-        model.eval()
-        transformed = transforms(image=image_array)['image']
-        x = np.transpose(transformed, (2, 0, 1))
-        x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
-
-        if torch.cuda.is_available():
-            x = x.cuda()
-
-        with torch.no_grad():
-            output = model(x)
-            probs = torch.softmax(output, dim=1)
-            pred_idx = probs.argmax(dim=1).item()
-            confidence = probs[0, pred_idx].item()
-
-        pred_class = self.cls_names[pred_idx]
-        return pred_class, confidence
-
-    # ----------------------------------------------------------------------
     # YOLO detection
-    # ----------------------------------------------------------------------
     def detect(self, results, image):
         for idx, result in enumerate(results):
             # img = cv2.imread(image[idx]) stream
@@ -113,7 +54,7 @@ class KYLE:
                     xt, yt, w, h = self.crop_predict.predict_load_crop(coords, box.orig_shape, dims)
 
                     crop = self.crop_load(img, xt, yt, w, h)
-                    pred_class, confidence = self.predict_one_image(crop)
+                    pred_class, confidence = self.classify_model.predict_one_image(crop)
 
                     print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
 
@@ -132,7 +73,7 @@ class KYLE:
                     w, h = box.xywhr.numpy()[0].astype(int)[2:4]
 
                     crop = self.crop_load(img, xt, yt, w, h)
-                    pred_class, confidence = self.predict_one_image(crop)
+                    pred_class, confidence = self.classify_model.predict_one_image(crop)
 
                     print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
 
@@ -143,10 +84,12 @@ class KYLE:
 
                     cv_show("Load", img)
 
+    #Run inference on one image
     def detect_image(self, image):
         results = self.yolo_model.predict(image, stream=False)
         self.detect(results, image)
 
+    #Run inference on bulk images - upload array of images.
     def detect_stream(self, stream):
         results = self.yolo_model.predict(stream, stream=True)
         self.detect(results, stream)
