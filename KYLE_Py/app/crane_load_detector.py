@@ -6,28 +6,13 @@ import albumentations as A
 import image_tools
 from pathlib import Path
 
+from Models.Load_Predict import Load_Predict
+
 
 def cv_show(name, image):
     cv2.imshow(name, image)
     cv2.waitKey(5000)
     cv2.destroyAllWindows()
-
-
-class LinearRegression(torch.nn.Module):
-    def __init__(self, in_feat, out_feat, hidden):
-        super().__init__()
-        self.linear = torch.nn.Sequential(
-            torch.nn.Linear(in_feat, hidden),
-            torch.nn.ReLU(),
-            torch.nn.Linear(hidden, hidden),
-            torch.nn.ReLU(),
-            torch.nn.Linear(hidden, out_feat),
-            torch.nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        return self.linear(x)
-
 
 class KYLE:
 
@@ -38,27 +23,17 @@ class KYLE:
         # -------------------------------
         self.weights = yolo_weights
         self.yolo_model = YOLO(self.weights)
-
-        # -------------------------------
-        # Test images
-        # -------------------------------
-        # self.test_images = test_images
-
+        
         # -------------------------------
         # Load Crop Regression Model
         # -------------------------------
-        self.crop_predict = LinearRegression(14, 2, 512)
-        state = torch.load("./crane_models/LoadRegressionDims.pth",
-                           map_location="cpu",
-                           weights_only=True)
-        self.crop_predict.load_state_dict(state)
-        self.crop_predict.eval()
+        self.crop_predict = Load_Predict("./Models/crane_models/LoadRegressionDims.pth")
 
         # -------------------------------
         # Load Classifier
         # -------------------------------
         checkpoint = torch.load(
-            "./crane_models/crane_classifier.pth",
+            "./Models/crane_models/crane_classifier.pth",
             map_location='cpu',
             weights_only=False
         )
@@ -135,7 +110,7 @@ class KYLE:
                     coords = box.xyxyxyxyn[0].flatten()
                     dims = box.xywhr[0]
 
-                    xt, yt, w, h = image_tools.predict_load_crop(coords, box.orig_shape, dims, self.crop_predict)
+                    xt, yt, w, h = self.crop_predict.predict_load_crop(coords, box.orig_shape, dims)
 
                     crop = self.crop_load(img, xt, yt, w, h)
                     pred_class, confidence = self.predict_one_image(crop)
@@ -168,9 +143,6 @@ class KYLE:
 
                     cv_show("Load", img)
 
-    # ----------------------------------------------------------------------
-    # Public functions
-    # ----------------------------------------------------------------------
     def detect_image(self, image):
         results = self.yolo_model.predict(image, stream=False)
         self.detect(results, image)
