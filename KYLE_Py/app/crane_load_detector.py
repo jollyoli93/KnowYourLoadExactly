@@ -1,36 +1,19 @@
-# from wandb.integration.ultralytics import add_wandb_callback
 from ultralytics import YOLO
 import cv2
 import numpy as np
 import torch
-import logging
 import albumentations as A
+from pathlib import Path
 
-logging.basicConfig(filename="crane_detect.log",
-                    format='%(asctime)s %(message)s',
-                    level=logging.INFO,
-                    filemode='w')
-
-logger = logging.getLogger()
-
-best_weights = "./crane_models/yolov8_basic.pt"
-yolo_model = YOLO(best_weights)
-
-test_images = ['../images/2503061230060000_jpg.rf.25f5fb4afcbba2631a14691fc0869d85.jpg', '../images/2507190940060000_jpg.rf.25413f580b6dab2700fab296e0eca813.jpg']
-
-# # Try one image
-# image = 'images/2507190940060000_jpg.rf.25413f580b6dab2700fab296e0eca813.jpg'
-# img = cv2.imread(image)  #1 hook, 1 load real
 
 def cv_show(name, image):
     cv2.imshow(name, image)
     cv2.waitKey(5000)
     cv2.destroyAllWindows()
-    
-# cv_show("Crane", img)
+
 
 class LinearRegression(torch.nn.Module):
-    def __init__(self, in_feat, out_feat, hidden) -> None:
+    def __init__(self, in_feat, out_feat, hidden):
         super().__init__()
         self.linear = torch.nn.Sequential(
             torch.nn.Linear(in_feat, hidden),
@@ -42,168 +25,186 @@ class LinearRegression(torch.nn.Module):
         )
 
     def forward(self, x):
-        x = self.linear(x)
-        return x
-    
-cropPredict = LinearRegression(14, 2, 512)
-cropPredict.load_state_dict(torch.load("./crane_models/LoadRegressionDims.pth", weights_only=True, map_location=torch.device('cpu')))
-cropPredict.eval()
+        return self.linear(x)
 
-def predict_load_crop(hook_coords, img_size, dims):
-  img_width = img_size[1]
-  img_height = img_size[0]
-  print(f"Predicting new coords")
 
-  xn = dims[0]/img_width
-  yn = dims[1]/img_height
-  width_n = dims[2]/img_width
-  height_n = dims[3]/img_height
-  area = width_n*height_n
-  ratio = width_n/height_n
+class KYLE:
 
-  input = torch.concat((hook_coords, torch.tensor([width_n]), torch.tensor([height_n]), torch.tensor([area]), torch.tensor([ratio]),
-                        torch.tensor([xn]), torch.tensor([yn])), dim=0) #Changed axis to dim from Colab
+    def __init__(self, yolo_weights):
 
-  predict = cropPredict(input) #x, y
-  img_dims = torch.tensor([img_width, img_height])
-  xtens,ytens = predict*img_dims
+        # -------------------------------
+        # YOLO
+        # -------------------------------
+        self.weights = yolo_weights
+        self.yolo_model = YOLO(self.weights)
 
-  xc, yc = int(xtens), int(ytens)
+        # -------------------------------
+        # Test images
+        # -------------------------------
+        # self.test_images = test_images
 
-  # Toggle size of crop with respect to size of image
-  w , h = int(img_width*0.07), int(img_height*0.07)
+        # -------------------------------
+        # Load Crop Regression Model
+        # -------------------------------
+        self.cropPredict = LinearRegression(14, 2, 512)
+        state = torch.load("./crane_models/LoadRegressionDims.pth",
+                           map_location="cpu",
+                           weights_only=True)
+        self.cropPredict.load_state_dict(state)
+        self.cropPredict.eval()
 
-  #Get top left and top right x,y
-  yt = yc - (h//2)
-  xt = xc - (w//2)
+        # -------------------------------
+        # Load Classifier
+        # -------------------------------
+        checkpoint = torch.load(
+            "./crane_models/crane_classifier.pth",
+            map_location='cpu',
+            weights_only=False
+        )
 
-  print(f"Crop dims: {xt, yt, w, h}")
-  return xt, yt, w, h
+        self.class_model = checkpoint["model"]
+        self.class_model.eval()
 
-  # return standard_size #Return top left and bottom right to crop
-  
-def crop_load(img, x, y, w, h):
-  """
-    Takes as input, top left corner, width and height.
-  """
-  crop_img = img.copy()
-  cropped_img = crop_img[y:y+h,x:x+w]
+        if torch.cuda.is_available():
+            self.class_model.cuda()
 
-  return cropped_img
+        self.cls_names = checkpoint["cls_names"]
+        self.cls_index = checkpoint["cls_index"]
 
-checkpoint = torch.load('./crane_models/crane_classifier.pth', map_location='cpu', weights_only=False)
+        print("Model loaded successfully!")
 
-class_model = checkpoint['model']
-class_model.eval()
+        # -------------------------------
+        # Albumentations transform
+        # -------------------------------
+        self.val_transforms = A.Compose([
+            A.Resize(height=240, width=240),
+            A.Normalize(mean=(0.485, 0.456, 0.406),
+                        std=(0.229, 0.224, 0.225),
+                        max_pixel_value=255.0),
+        ])
 
-if torch.cuda.is_available():
-    class_model = class_model.cuda()
+    # ----------------------------------------------------------------------
+    # Prediction modules
+    # ----------------------------------------------------------------------
+    def predict_load_crop(self, hook_coords, img_size, dims):
+        img_width = img_size[1]
+        img_height = img_size[0]
 
-cls_names = checkpoint['cls_names']
-cls_index = checkpoint['cls_index']
+        xn = dims[0] / img_width
+        yn = dims[1] / img_height
+        width_n = dims[2] / img_width
+        height_n = dims[3] / img_height
+        area = width_n * height_n
+        ratio = width_n / height_n
 
-print("Model loaded successfully!")
-logger.info("Model loaded successfully!")
+        input_feats = torch.concat((
+            hook_coords,
+            torch.tensor([width_n, height_n, area, ratio, xn, yn])
+        ), dim=0)
 
-val_transforms = A.Compose([
-    A.Resize(height=240, width=240, p=1.0),
-    A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0),
-])
+        pred = self.cropPredict(input_feats)
+        img_dims = torch.tensor([img_width, img_height])
+        xtens, ytens = pred * img_dims
 
-def predict_one_image(model, image_array, transforms=val_transforms):
-    """
-    Predict class for a single image from test set
-    """
-    model.eval()
+        xc, yc = int(xtens), int(ytens)
+        w, h = int(img_width * 0.07), int(img_height * 0.07)
 
-    # Apply transforms
-    transformed = transforms(image=image_array)['image']
-    x = np.transpose(transformed, (2, 0, 1))
-    x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)  # Add batch dimension
+        yt = yc - (h // 2)
+        xt = xc - (w // 2)
 
-    # Move to GPU if available
-    if torch.cuda.is_available():
-        x = x.cuda()
+        return xt, yt, w, h
 
-    with torch.no_grad():
-        output = model(x)
-        probs = torch.softmax(output, dim=1)
-        pred_idx = probs.argmax(dim=1).item()
-        confidence = probs[0, pred_idx].item()
+    def crop_load(self, img, x, y, w, h):
+        return img[y:y+h, x:x+w]
 
-    pred_class = cls_names[pred_idx]
+    # ----------------------------------------------------------------------
+    # Classifier wrapper
+    # ----------------------------------------------------------------------
+    def predict_one_image(self, image_array):
+        model = self.class_model
+        transforms = self.val_transforms
 
-    return pred_class, confidence
+        model.eval()
+        transformed = transforms(image=image_array)['image']
+        x = np.transpose(transformed, (2, 0, 1))
+        x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
 
-# Run prediction on the image
-# results = yolo_model.predict(img, stream=False)
+        if torch.cuda.is_available():
+            x = x.cuda()
 
-# Run on multiple images
-results = yolo_model.predict(test_images, stream=True)
+        with torch.no_grad():
+            output = model(x)
+            probs = torch.softmax(output, dim=1)
+            pred_idx = probs.argmax(dim=1).item()
+            confidence = probs[0, pred_idx].item()
 
-# Iterate over the results
-count = 0
-for result in results:
-    logger.info(f"Running image {count}")
-    img = cv2.imread(test_images[count])
-    count += 1
-    
-    boxes = result.obb.cpu()  # Get boxes on CPU in numpy format
-    for box in boxes:  # Iterate over boxes - each box is a prediction (Multiple predictions will run each)
-        logger.info("Start of box predict")
-        # print(box, f" printing box obj")
-        r = box.xyxy[0].numpy() .astype(int) # Get corner points as int (Actual Co-ords)
-        class_id = int(box.cls[0])  # Get class ID
-        class_name = yolo_model.names[class_id]  # Get class name using the class ID
-        conf = float(box.conf[0])
-        print(f"Class: {class_name}, Box: {r}")  # Print class name and box coordinates
-        label = f"{class_name}: {conf:.2f}"
+        pred_class = self.cls_names[pred_idx]
+        return pred_class, confidence
 
-        # Get predicted co-ordinates if not load detected (Currently duplicated load crop, need to cancel it)
+    # ----------------------------------------------------------------------
+    # YOLO detection
+    # ----------------------------------------------------------------------
+    def detect(self, results, image):
+        for idx, result in enumerate(results):
+            # img = cv2.imread(image[idx]) stream
+            img = cv2.imread(image)
+            boxes = result.obb.cpu()
 
-        if class_id == 0: #Hook Class - doesn't capture hook
-          logger.info(f"No hook captured, running {class_id}")
-          coords = box.xyxyxyxyn[0].flatten() #Get all coordinates for prediction
-          print(f"XY n {coords}")
-          dims = box.xywhr[0]
+            for box in boxes:
+                r = box.xyxy[0].numpy().astype(int)
+                class_id = int(box.cls[0])
+                class_name = self.yolo_model.names[class_id]
+                conf = float(box.conf[0])
 
-          # Predict location for crop
-          pts = predict_load_crop(coords, box.orig_shape, dims)
-          xt, yt, w, h = pts
-          crop = crop_load(img, xt,yt,w,h)
-          # crop_resized = cv2.resize(crop, (240, 240))
+                print(f"Class: {class_name}, Box: {r}")
 
-          # Show cropped region
-        #   cv_show("crop", crop)
-          # classify crop
-          predicted_class, confidence = predict_one_image(class_model, crop)
+                # -----------------------------------
+                # HOOK (class 0)
+                # -----------------------------------
+                if class_id == 0:
+                    coords = box.xyxyxyxyn[0].flatten()
+                    dims = box.xywhr[0]
 
-          print(f"Predicted Cropped Class: {predicted_class}")
-          print(f"Confidence of Crop: {confidence:.4f} ({confidence*100:.2f}%)")
+                    xt, yt, w, h = self.predict_load_crop(coords, box.orig_shape, dims)
 
-          cv2.rectangle(img, (xt, yt), (xt + w, yt + h), (0, 255, 0), 2) # type: ignore
-          cv2.putText(img, f"{predicted_class}: {confidence:.2f}", (xt, yt - 10), # type: ignore
-            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2, cv2.LINE_AA) # type: ignore
-          cv_show("Hook", img)
+                    crop = self.crop_load(img, xt, yt, w, h)
+                    pred_class, confidence = self.predict_one_image(crop)
 
-        if class_id == 1: #Load Class - doesn't capture hook
-          logger.info(f"Load crop found, running {class_id}")
-          xt, yt, xb, yb = r
-          w, h = box.xywhr.numpy()[0].astype(int)[2:4] # type: ignore
-          crop = crop_load(img, xt,yt,w,h)
-          # crop_resized = cv2.resize(crop, (200, 200))
-        #   cv_show("crop", crop)
+                    print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
 
-          #classify
-          predicted_class, confidence = predict_one_image(class_model, crop)
-          print(f"Predicted Original Class: {predicted_class}")
-          print(f"Confidence of Original: {confidence:.4f} ({confidence*100:.2f}%)")
+                    cv2.rectangle(img, (xt, yt), (xt+w, yt+h), (0, 255, 0), 2)
+                    cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                                (xt, yt - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-          cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2) # pyright: ignore[reportCallIssue, reportArgumentType]
-          cv2.putText(img, f"{predicted_class}: {confidence:.2f}", (xt, yt - 10), # type: ignore
-            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2, cv2.LINE_AA) # pyright: ignore[reportCallIssue]
-          cv_show("Load", img)
+                    cv_show("Hook", img)
 
-        logger.info("End of box")
-    logger.info("End of result")
-logger.info("End.")
+                # -----------------------------------
+                # LOAD (class 1)
+                # -----------------------------------
+                elif class_id == 1:
+                    xt, yt, xb, yb = r
+                    w, h = box.xywhr.numpy()[0].astype(int)[2:4]
+
+                    crop = self.crop_load(img, xt, yt, w, h)
+                    pred_class, confidence = self.predict_one_image(crop)
+
+                    print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
+
+                    cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2)
+                    cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                                (xt, yt - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                    cv_show("Load", img)
+
+    # ----------------------------------------------------------------------
+    # Public functions
+    # ----------------------------------------------------------------------
+    def detect_image(self, image):
+        results = self.yolo_model.predict(image, stream=False)
+        self.detect(results, image)
+
+    def detect_stream(self, stream):
+        results = self.yolo_model.predict(stream, stream=True)
+        self.detect(results, stream)
