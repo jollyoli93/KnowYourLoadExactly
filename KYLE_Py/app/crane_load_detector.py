@@ -1,6 +1,7 @@
 from ultralytics import YOLO
 import cv2
 import torch
+import numpy as np
 from . import image_tools
 from pathlib import Path
 
@@ -31,13 +32,18 @@ class KYLE:
     # YOLO detection
     def detect(self, results, image):
       load_results = []
+          # image MUST be a decoded numpy array
+      if image is None:
+        raise ValueError("detect() received image=None")
+
+      if not isinstance(image, np.ndarray):
+        raise TypeError(f"detect() expected numpy array, got {type(image)}")
+
+      img = image.copy()  # safe copy
       
       for idx, result in enumerate(results):
-          img = None
-          if (type(image) is not list):
-            img = cv2.imread(image)
-          else: #is array(list) - issue may result if the stream isnt a list
-            img = cv2.imread(image[idx])  
+        #   if (type(image) is list): #is array(list) - issue may result if the stream isnt a list
+        #     img = cv2.imread(image[idx])  
             
           image_results = {}  
           
@@ -100,7 +106,7 @@ class KYLE:
     def detect_image(self, image):
         yolo_results = self.yolo_model.predict(image, stream=False)
         crop_results = self.detect(yolo_results, image)
-        print(crop_results)
+        return crop_results
 
     #Run inference on bulk images - upload array of images.
     def detect_stream(self, stream):

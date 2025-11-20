@@ -3,6 +3,7 @@ import python_multipart
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
 import cv2
+import numpy as np
 
 from . import crane_load_detector as cdt
 
@@ -26,8 +27,14 @@ async def detect_one_image(file: UploadFile = File(...)):
     
     if (content_type == "image/jpeg" or content_type == "image/jpg"):
         detect_one = cdt.KYLE()
-        result = detect_one.detect_image(file)
         
-        return {"Response":f"{resul[0]}"}
+        image_bytes = await file.read()
+        image = np.frombuffer(image_bytes, dtype=np.uint8)
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        
+        result = detect_one.detect_image(image)
+        print("Cropped full results: ", result)
+        
+        return {"Response":f"{result[0]}"}
     else:
         return {"Response":"Incorrect file type"}
