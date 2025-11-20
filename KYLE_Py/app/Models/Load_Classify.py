@@ -3,7 +3,7 @@ import albumentations as A
 import numpy as np
 
 class Load_Classify:
-    def __init__(self, path_to_model="./Models/crane_models/crane_classifier.pth"):
+    def __init__(self, path_to_model="app/Models/crane_models/crane_classifier.pth"):
         self.path = path_to_model
         checkpoint = torch.load(
             self.path,

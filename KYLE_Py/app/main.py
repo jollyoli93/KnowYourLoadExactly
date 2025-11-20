@@ -1,18 +1,20 @@
 from typing import Union
+import python_multipart
 
 from fastapi import FastAPI
-import crane_load_detector
+import cv2
+from . import crane_load_detector as cdt
 
 app = FastAPI()
 
 
 @app.get("/")
 def read_root():
-    image = 'images/2507190940060000_jpg.rf.25413f'
-    img = cv2.imread(image)
-    
-    kyle1 = crane_load_detector.KYLE()
-    kyle1.detect_image(img)
+    image = 'app/images/2503061230060000_jpg.rf.25f5fb4afcbba2631a14691fc0869d85.jpg'
+    best_weights = "app/Models/crane_models/yolov8_basic.pt"
+
+    kyle1 = cdt.KYLE(best_weights)
+    return kyle1.detect_image(image)
     # return {"Hello": "World"}
 
 

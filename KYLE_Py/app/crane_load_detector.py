@@ -1,11 +1,11 @@
 from ultralytics import YOLO
 import cv2
 import torch
-import image_tools
+from . import image_tools
 from pathlib import Path
 
-from Models.Load_Predict import Load_Predict
-from Models.Load_Classify import Load_Classify
+from app.Models.Crop_Predict import Crop_Predict
+from app.Models.Load_Classify import Load_Classify
 
 
 def cv_show(name, image):
@@ -21,8 +21,7 @@ class KYLE:
         self.yolo_model = YOLO(self.weights)
         
         # Load Crop finder Regression Model
-        self.crop_predict = Load_Predict("./Models/crane_models/LoadRegressionDims.pth") #remove hardcoded path
-
+        self.crop_predict = Crop_Predict() #remove hardcoded path
         # Load Classifier
         self.classify_model = Load_Classify()
 
@@ -64,14 +63,14 @@ class KYLE:
                   pred_class, confidence = self.classify_model.predict_one_image(crop)
                   image_results[pred_class] = [confidence, xt, yt, w, h]
                   
-                  # DEBUG STEPS
-                  print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
-                  cv2.rectangle(img, (xt, yt), (xt+w, yt+h), (0, 255, 0), 2)
-                  cv2.putText(img, f"{pred_class}: {confidence:.2f}",
-                              (xt, yt - 5),
-                              cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                #   # DEBUG STEPS
+                #   print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
+                #   cv2.rectangle(img, (xt, yt), (xt+w, yt+h), (0, 255, 0), 2)
+                #   cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                #               (xt, yt - 5),
+                #               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-                  cv_show("Hook", img)
+                #   cv_show("Hook", img)
 
               # -----------------------------------
               # LOAD (class 1)
@@ -85,14 +84,14 @@ class KYLE:
 
                   image_results[pred_class] = [confidence, xt, yt, w, h]
 
-                  # DEBUG Steps
-                  print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
-                  cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2)
-                  cv2.putText(img, f"{pred_class}: {confidence:.2f}",
-                              (xt, yt - 5),
-                              cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                #   # DEBUG Steps
+                #   print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
+                #   cv2.rectangle(img, r[:2], r[2:], (0, 255, 0), 2)
+                #   cv2.putText(img, f"{pred_class}: {confidence:.2f}",
+                #               (xt, yt - 5),
+                #               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-                  cv_show("Load", img)
+                #   cv_show("Load", img)
                   
           load_results.append(image_results)
       return load_results

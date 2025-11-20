@@ -15,8 +15,8 @@ class LinearRegression(torch.nn.Module):
     def forward(self, x):
         return self.linear(x)
 
-class Load_Predict:
-    def __init__(self, model_path):
+class Crop_Predict:
+    def __init__(self, model_path="app/Models/crane_models/LoadRegressionDims.pth"):
         self.model = LinearRegression(14, 2, 512)
         state = torch.load(model_path,
                            map_location="cpu",
