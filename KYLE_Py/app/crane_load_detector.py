@@ -15,7 +15,7 @@ def cv_show(name, image):
 
 class KYLE:
 
-    def __init__(self, yolo_weights):
+    def __init__(self, yolo_weights="app/Models/crane_models/yolov8_basic.pt"):
         # YOLO
         self.weights = yolo_weights
         self.yolo_model = YOLO(self.weights)
