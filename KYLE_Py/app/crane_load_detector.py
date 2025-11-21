@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.Models.Crop_Predict import Crop_Predict
 from app.Models.Load_Classify import Load_Classify
-
+from app.Results import Box_Result, Image_Result
 
 def cv_show(name, image):
     cv2.imshow(name, image)
@@ -15,7 +15,6 @@ def cv_show(name, image):
     cv2.destroyAllWindows()
 
 class KYLE:
-
     def __init__(self, yolo_weights="app/Models/crane_models/yolov8_basic.pt"):
         # YOLO
         self.weights = yolo_weights
@@ -44,8 +43,8 @@ class KYLE:
       for idx, result in enumerate(results):
         #   if (type(image) is list): #is array(list) - issue may result if the stream isnt a list
         #     img = cv2.imread(image[idx])  
-            
-          image_results = {}  
+          print(result)
+          image_results = []
           
           boxes = result.obb.cpu()
           for box in boxes:
@@ -67,7 +66,10 @@ class KYLE:
 
                   crop = self.crop_load(img, xt, yt, w, h)
                   pred_class, confidence = self.classify_model.predict_one_image(crop)
-                  image_results[pred_class] = [confidence, xt, yt, w, h]
+                  
+                  crop_result = Box_Result(class_type=pred_class, x_top=xt, y_top=yt, width=w, height=h)
+                  image_results.append(crop_result)
+                  # image_results[pred_class] = [confidence, xt, yt, w, h]
                   
                 #   # DEBUG STEPS
                 #   print(f"Predicted Crop: {pred_class}, Conf {confidence:.4f}")
@@ -87,8 +89,10 @@ class KYLE:
 
                   crop = self.crop_load(img, xt, yt, w, h)
                   pred_class, confidence = self.classify_model.predict_one_image(crop)
-
-                  image_results[pred_class] = [confidence, xt, yt, w, h]
+                  
+                  crop_result = Box_Result(class_type=pred_class, x_top=xt, y_top=yt, width=w, height=h)
+                  image_results.append(crop_result)
+                  # image_results[pred_class] = [confidence, xt, yt, w, h]
 
                 #   # DEBUG Steps
                 #   print(f"Pred Original: {pred_class}, Conf {confidence:.4f}")
@@ -99,7 +103,7 @@ class KYLE:
 
                 #   cv_show("Load", img)
                   
-          load_results.append(image_results)
+          load_results.append(Image_Result(image_name= result.path,image_results = image_results, image_size=result.orig_shape))
       return load_results
 
     #Run inference on one image

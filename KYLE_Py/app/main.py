@@ -35,6 +35,6 @@ async def detect_one_image(file: UploadFile = File(...)):
         result = detect_one.detect_image(image)
         print("Cropped full results: ", result)
         
-        return {"Response":f"{result[0]}"}
+        return result
     else:
         return {"Response":"Incorrect file type"}
