@@ -43,7 +43,6 @@ class KYLE:
       for idx, result in enumerate(results):
         #   if (type(image) is list): #is array(list) - issue may result if the stream isnt a list
         #     img = cv2.imread(image[idx])  
-          print(result)
           image_results = []
           
           boxes = result.obb.cpu()
@@ -67,7 +66,7 @@ class KYLE:
                   crop = self.crop_load(img, xt, yt, w, h)
                   pred_class, confidence = self.classify_model.predict_one_image(crop)
                   
-                  crop_result = Box_Result(class_type=pred_class, x_top=xt, y_top=yt, width=w, height=h)
+                  crop_result = Box_Result(class_type=pred_class, conf=conf, x_top=xt, y_top=yt, width=w, height=h)
                   image_results.append(crop_result)
                   # image_results[pred_class] = [confidence, xt, yt, w, h]
                   
@@ -90,7 +89,7 @@ class KYLE:
                   crop = self.crop_load(img, xt, yt, w, h)
                   pred_class, confidence = self.classify_model.predict_one_image(crop)
                   
-                  crop_result = Box_Result(class_type=pred_class, x_top=xt, y_top=yt, width=w, height=h)
+                  crop_result = Box_Result(class_type=pred_class, conf=conf, x_top=xt, y_top=yt, width=w, height=h)
                   image_results.append(crop_result)
                   # image_results[pred_class] = [confidence, xt, yt, w, h]
 
