@@ -1,14 +1,15 @@
 from pydantic import BaseModel
 
 class Box_Result(BaseModel):
-    class_type: str
-    conf: float
-    x_top: int
-    y_top: int
+    x_c: int
+    y_c: int
     width: int
     height: int
-    
+    conf: float
+    class_type: str
+
 class Image_Result(BaseModel):
     image_name: str
+    image_path: str
     image_size: tuple
     image_results: list[Box_Result]

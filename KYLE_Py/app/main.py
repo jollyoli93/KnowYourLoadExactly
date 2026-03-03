@@ -1,11 +1,16 @@
+from pathlib import Path
 from typing import Union
 import python_multipart
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
 import cv2
 import numpy as np
+from ultralytics import YOLO
 
-from . import crane_load_detector as cdt
+from app.Models.Load_Classify import Load_Classify
+from app.Models.Roi_Predict import Roi_Predict
+
+from app.KYLE import KYLE
 import logging
 
 # Configure basic logging
@@ -28,9 +33,13 @@ def read_root():
 @app.get("/test_detect")
 def detect_test():
     logger.info("Running test detection model")
-    image = 'app/images/2503061230060000_jpg.rf.25f5fb4afcbba2631a14691fc0869d85.jpg'
-    kyle1 = cdt.KYLE()
-    return kyle1.detect_image(image)
+    BASE_DIR = Path(__file__).resolve().parent
+    image = BASE_DIR / "images" / "crane.jpg"
+    # objd_model_ss = YOLO("./Models/crane_models/yolov8_basic.pt")
+    roi_predict = Roi_Predict("./Models/crane_models/LoadRegressionStandardv2.pth")
+    classify_model = Load_Classify("./Models/crane_models/crane_classifier.pth")
+    kyle1 = KYLE(objd_model=YOLO, ob_weights="./Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
+    return kyle1.detect(image)
 
 @app.post("/detect/")
 async def detect_one_image(file: UploadFile = File(...)):
@@ -39,7 +48,7 @@ async def detect_one_image(file: UploadFile = File(...)):
     content_type = file.content_type
     logger.info(f"File uploaded: {content_type}")
     if (content_type == "image/jpeg" or content_type == "image/jpg"):
-        detect_one = cdt.KYLE()
+        detect_one = KYLE()
         
         logger.info(f"Awaiting file read.")
         image_bytes = await file.read()
@@ -54,5 +63,5 @@ async def detect_one_image(file: UploadFile = File(...)):
         logger.info("Inferrence Complete")
         return result
     else:
-        loger.info(f"Incorrect file type. Ending.")
+        logger.info(f"Incorrect file type. Ending.")
         return {"Response":"Incorrect file type"}
