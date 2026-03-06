@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y \
 # Upgrade pip first (important for torch installs)
 RUN pip install --upgrade pip
 
+# RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 # Copy requirements separately for better Docker caching
 COPY requirements.txt .
 
@@ -33,4 +35,4 @@ RUN python app/huggingFaceModels.py
 EXPOSE 80
 
 # Start FastAPI
-CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "80"]
+CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "10000"]

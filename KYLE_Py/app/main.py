@@ -39,10 +39,13 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Load Detection Model
-roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
-classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.pth")
-detect_one = KYLE(objd_model=YOLO, ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
+@app.on_event("startup")
+def load_models():
+    global detect_one
+    # Load Detection Model
+    roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
+    classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.pth")
+    detect_one = KYLE(objd_model=YOLO, ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
 
 @app.get("/")
 def read_root():
@@ -53,8 +56,7 @@ def read_root():
 def detect_test():
     logger.info("Running test detection model")
     image = BASE_DIR / "images" / "crane.jpg"
-    kyle1 = KYLE(objd_model=YOLO, ob_weights=BASE_DIR/"Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
-    return kyle1.detect(image)
+    return detect_one.detect(image)
 
 @app.post("/detect")
 async def detect_one_image(file: UploadFile = File(...)):
