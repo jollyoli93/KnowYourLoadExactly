@@ -2,6 +2,7 @@
 **/test_images/
 **/images/
 **/.venv
+**/Models
 
 # Ignore image files globally
 *.jpg
