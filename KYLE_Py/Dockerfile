@@ -35,4 +35,4 @@ RUN python app/huggingFaceModels.py
 EXPOSE 80
 
 # Start FastAPI
-CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "10000"]
+CMD fastapi run app/main.py --host 0.0.0.0 --port ${PORT:-10000}
