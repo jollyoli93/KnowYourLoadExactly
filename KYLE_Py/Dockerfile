@@ -27,6 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application
 COPY . .
 
+RUN python app/huggingFaceModels.py
+
 # Expose API port
 EXPOSE 80
 

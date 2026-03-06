@@ -42,8 +42,7 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load Detection Model
 roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
 classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.pth")
-detect_one = KYLE(objd_model=YOLO, ob_weights="./Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
-
+detect_one = KYLE(objd_model=YOLO, ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
 
 @app.get("/")
 def read_root():
