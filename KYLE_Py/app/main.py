@@ -36,6 +36,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+
+# Load Detection Model
+roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
+classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.pth")
+detect_one = KYLE(objd_model=YOLO, ob_weights="./Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
+
+
 @app.get("/")
 def read_root():
     logger.info("Root endpoint accessed")
@@ -44,12 +52,8 @@ def read_root():
 @app.get("/test_detect")
 def detect_test():
     logger.info("Running test detection model")
-    BASE_DIR = Path(__file__).resolve().parent
     image = BASE_DIR / "images" / "crane.jpg"
-
-    roi_predict = Roi_Predict("./Models/crane_models/LoadRegressionStandardv2.pth")
-    classify_model = Load_Classify("./Models/crane_models/crane_classifier.pth")
-    kyle1 = KYLE(objd_model=YOLO, ob_weights="./Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
+    kyle1 = KYLE(objd_model=YOLO, ob_weights=BASE_DIR/"Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
     return kyle1.detect(image)
 
 @app.post("/detect")
@@ -59,9 +63,6 @@ async def detect_one_image(file: UploadFile = File(...)):
     content_type = file.content_type
     logger.info(f"File uploaded: {content_type}")
     if (content_type == "image/jpeg" or content_type == "image/jpg"):
-        roi_predict = Roi_Predict("./Models/crane_models/LoadRegressionStandardv2.pth")
-        classify_model = Load_Classify("./Models/crane_models/crane_classifier.pth")
-        detect_one = KYLE(objd_model=YOLO, ob_weights="./Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
         
         logger.info(f"Awaiting file read.")
         image_bytes = await file.read()
