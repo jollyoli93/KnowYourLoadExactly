@@ -44,8 +44,12 @@ def load_models():
     global detect_one
     # Load Detection Model
     roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
-    classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.pth")
-    detect_one = KYLE(objd_model=YOLO, ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", roi_model=roi_predict, classify_model=classify_model)
+    classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.onnx")
+    detect_one = KYLE(
+        objd_model=YOLO, 
+        ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", 
+        roi_model=roi_predict, 
+        classify_model=classify_model)
 
 @app.get("/")
 def read_root():
@@ -64,14 +68,14 @@ async def detect_one_image(file: UploadFile = File(...)):
     
     content_type = file.content_type
     logger.info(f"File uploaded: {content_type}")
-    if (content_type == "image/jpeg" or content_type == "image/jpg"):
+    if (content_type == "image/jpeg" or content_type == "image/jpg"): # Would png work?
         
         logger.info(f"Awaiting file read.")
         image_bytes = await file.read()
         
         logger.info(f"Converting image format.")
-        image = np.frombuffer(image_bytes, dtype=np.uint8)
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        image = np.frombuffer(image_bytes, dtype=np.uint8) # Why int not float32?
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR) # What is this doing?
         
         logger.info(f"Running inference...")
         result = detect_one.detect(image)
@@ -79,5 +83,5 @@ async def detect_one_image(file: UploadFile = File(...)):
         logger.info("Inferrence Complete")
         return result
     else:
-        logger.info(f"Incorrect file type. Ending.")
-        return {"Response":"Incorrect file type"}
+        logger.info(f"Incorrect file type. Use JPG or JPEG only.")
+        return {"Response":"Incorrect file type. Use JPG or JPEG only."}

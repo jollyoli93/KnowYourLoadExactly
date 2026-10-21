@@ -1,8 +1,10 @@
 import torch
-from sklearn.preprocessing import StandardScaler
 import numpy as np
+from PIL import Image
+from sklearn.preprocessing import StandardScaler
 from pathlib import Path
 from math import sqrt
+
 
 def extract_coords(coords):
     coord_split = [
@@ -156,3 +158,11 @@ def center_to_corners(xc, yc, w,h):
   yt = yc - (h/2)
   yb = yc + (h/2)
   return xl, xr, yt, yb, w, h
+
+def image_processes(x, size):
+  img_pil = Image.open(x).convert('RGB').resize(size)
+  img = np.array(img_pil).astype('float32')
+  img = img.transpose(2,0,1)
+  img /= 255
+  img = img[None, ...]
+  return img
