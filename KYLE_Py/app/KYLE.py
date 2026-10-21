@@ -22,7 +22,11 @@ class KYLE:
         self.predictions = []
 
     def _crop_load(self, img, x, y, w, h):
-        return img[y:y+h, x:x+w]
+        cropped_img = img[y:y+h, x:x+w]
+        print(cropped_img.shape)
+        cv2.imwrite(str(f"crop.png"), cropped_img)
+        # cv_show("crop",cropped_img)
+        return cropped_img
 
     def _second_stage_detector(self, crop, roi_size):
       """
@@ -161,6 +165,7 @@ class KYLE:
         h  = int(max(1, min(h, _img.shape[0] - yt)))
 
         crop = self._crop_load(_img, xl, yt, w, h)
+        print(crop.shape)
         pred_class, confidence = self.classify_model.predict_one_image(crop)
 
         box_result = Box_Result(

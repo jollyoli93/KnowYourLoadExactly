@@ -17,11 +17,11 @@ cycler==0.12.1
 cymem==2.0.13
 dnspython==2.8.0
 email-validator==2.3.0
-fastai==2.8.5
+# fastai==2.8.5
 fastapi==0.121.1
 fastapi-cli==0.0.16
 fastapi-cloud-cli==0.3.1
-fastcore==1.8.16
+# fastcore==1.8.16
 fastdownload==0.0.7
 fastprogress==1.0.3
 fasttransform==0.0.2
