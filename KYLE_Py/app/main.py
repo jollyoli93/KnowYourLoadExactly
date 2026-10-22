@@ -43,7 +43,8 @@ BASE_DIR = Path(__file__).resolve().parent
 @app.on_event("startup")
 def load_models():
     global detect_one
-    roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
+    roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionAdam250.pth")
+
     session = ModelCache.get_session()
     classify_model = Load_Classify(session)
     detect_one = KYLE(

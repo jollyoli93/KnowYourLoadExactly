@@ -1,3 +1,5 @@
+import random
+
 from ultralytics import YOLO
 import cv2
 import torch
@@ -17,10 +19,8 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
-# Assuming box_gating, center_to_corners, corner_to_center, Image_Result, Box_Result are imported
-
 class KYLE:
-    def __init__(self, objd_model, ob_weights, roi_model, classify_model, second_detect=True):
+    def __init__(self, objd_model, ob_weights, roi_model, classify_model, second_detect=False):
         self.objd_model = objd_model(ob_weights)
         self.roi_predict = roi_model
         self.classify_model = classify_model
@@ -28,7 +28,9 @@ class KYLE:
         self.second_detect = second_detect
 
     def _crop_load(self, img, x, y, w, h):
-        return img[y:y+h, x:x+w]
+        cropped_img = img[y:y+h, x:x+w]
+        cv_save_debug(f"name-{random.randint(1, 10)}", cropped_img) #DEBUG
+        return cropped_img
 
     def _second_stage_detector(self, crop, roi_size):
         print("Predicting Second Crop")
@@ -57,16 +59,17 @@ class KYLE:
         if ROI.size == 0: 
             return None
 
-        load_crop, lx1, ly1, lx2, ly2, yolo_conf = self._second_stage_detector(ROI, max(crop_w, crop_h))
+        if second_detect:
+          load_crop, lx1, ly1, lx2, ly2, yolo_conf = self._second_stage_detector(ROI, 640)
 
-        if load_crop is not None and second_detect:
-            print("Second ROI detected")
-            gx1, gy1 = xl + lx1, yt + ly1
-            gx2, gy2 = xl + lx2, yt + ly2
-            return gx1, gy1, gx2 - gx1, gy2 - gy1
-            
-        if not second_detect:
-            print("MLP proposed a region, but YOLO stage 2 found no load there.")
+          if load_crop is not None and second_detect:
+              print("Second ROI detected")
+              gx1, gy1 = xl + lx1, yt + ly1
+              gx2, gy2 = xl + lx2, yt + ly2
+              return gx1, gy1, gx2 - gx1, gy2 - gy1
+              
+          if not second_detect:
+              print("MLP proposed a region, but YOLO stage 2 found no load there.")
         else:
             print("Returning ROI")
             
@@ -174,3 +177,7 @@ class KYLE:
             out = self._predict_one_img(r, img, idx=i, predict_from_hook=predict_from_hook)
             self.predictions.append(out)
             yield out, r
+
+def cv_save_debug(name, image):
+    if image is not None and image.size > 0:
+        cv2.imwrite(f"app/Debug/{name}.png", image)
