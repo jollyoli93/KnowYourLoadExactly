@@ -28,9 +28,9 @@ class Roi_Predict:
     self.model.load_state_dict(state)
     self.model.eval()
 
-    BASE_DIR = Path(__file__).resolve().parent
-    feat_scaler_path = BASE_DIR / "scalars" / "feat_scaler.pkl"
-    targ_scaler_path = BASE_DIR / "scalars" / "target_scaler.pkl"
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    feat_scaler_path = BASE_DIR / "Models" / "scalars" / "feat_scaler.pkl"
+    targ_scaler_path = BASE_DIR / "Models"  / "scalars" / "target_scaler.pkl"
 
     self.feat_scalar = load(feat_scaler_path)
     self.target_scalar = load(targ_scaler_path)

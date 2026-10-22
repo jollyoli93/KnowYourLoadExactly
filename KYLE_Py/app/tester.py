@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from Models.Load_Classify import Load_Classify, ModelCache
+from app.ModelClasses.Load_Classify import Load_Classify, ModelCache
 from PIL import Image
 import numpy as np
 

@@ -2,8 +2,8 @@ import threading
 from pathlib import Path
 import onnxruntime as rt
 
-DEFAULT_MODEL_PATH = Path("../app/Models/crane_models/crane_classifier.onnx")
-
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_MODEL_PATH = Path("./app/Models/crane_models/crane_classifier.onnx")
 
 class ModelCache:
     _session = None

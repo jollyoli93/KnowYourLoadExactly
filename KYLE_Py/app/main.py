@@ -8,10 +8,11 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
-from app.Models.Load_Classify import Load_Classify
-from app.Models.Roi_Predict import Roi_Predict
+from app.ModelCache import ModelCache
+from app.ModelClasses.Load_Classify import Load_Classify
+from app.ModelClasses.Roi_Predict import Roi_Predict
 
-from app.KYLE import KYLE
+from app.ModelClasses.KYLE import KYLE
 import logging
 
 # Configure basic logging
@@ -42,9 +43,9 @@ BASE_DIR = Path(__file__).resolve().parent
 @app.on_event("startup")
 def load_models():
     global detect_one
-    # Load Detection Model
     roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionStandardv2.pth")
-    classify_model = Load_Classify(BASE_DIR/ "Models/crane_models/crane_classifier.onnx")
+    session = ModelCache.get_session()
+    classify_model = Load_Classify(session)
     detect_one = KYLE(
         objd_model=YOLO, 
         ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", 

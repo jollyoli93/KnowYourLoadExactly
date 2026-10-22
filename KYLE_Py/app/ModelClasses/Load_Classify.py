@@ -25,18 +25,9 @@ class Load_Classify:
         'pipes', 'plant', 'precast', 'rebar', 'skip'
     ]
 
-    def __init__(self, path_to_model=None):
-        # Fallback to default absolute path if none provided
-        # self.path = path_to_model or DEFAULT_MODEL_PATH
+    def __init__(self, session = rt.InferenceSession):
         self.input_size = (240, 240)
-        self.sess = None
-        self.input_name = None
-        self.output_name = None
-        
-        self.load_model_onnx()
-
-    def load_model_onnx(self):
-        self.sess = ModelCache.get_session(self.path)
+        self.sess = session
         self.input_name = self.sess.get_inputs()[0].name
         self.output_name = self.sess.get_outputs()[0].name
 
