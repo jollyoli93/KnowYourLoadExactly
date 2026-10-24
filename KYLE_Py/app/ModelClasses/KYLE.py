@@ -29,7 +29,7 @@ class KYLE:
 
     def _crop_load(self, img, x, y, w, h):
         cropped_img = img[y:y+h, x:x+w]
-        cv_save_debug(f"name-{random.randint(1, 10)}", cropped_img) #DEBUG
+        # cv_save_debug(f"name-{random.randint(1, 10)}", cropped_img) #DEBUG
         return cropped_img
 
     def _second_stage_detector(self, crop, roi_size):
@@ -180,4 +180,4 @@ class KYLE:
 
 def cv_save_debug(name, image):
     if image is not None and image.size > 0:
-        cv2.imwrite(f"app/Debug/{name}.png", image)
+        cv2.imwrite(f"app/images/Debug/{name}.png", image)

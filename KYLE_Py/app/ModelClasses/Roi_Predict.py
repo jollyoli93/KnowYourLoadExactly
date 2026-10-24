@@ -68,8 +68,8 @@ class Roi_Predict:
         hook_h_s = (h * img_height) / 100
         hook_w_s = (w * img_width) / 100
 
-        crop_h = int(y_offset * img_height * (1 + hook_h_s))    
-        crop_w = int(crop_h * (1 + hook_w_s))      
+        crop_h = min(int(y_offset * img_height * (1 + hook_h_s)), int(y_offset * img_height * 1.6))  
+        crop_w = int(crop_h * (1 + hook_w_s/10))     
 
         # check to ensure crop dimensions don't exceed image dimensions
         crop_h = min(crop_h, img_height)
