@@ -6,6 +6,6 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Download entire repository
 model_dir = snapshot_download(
-    repo_id="jollyOli93/Models",
+    repo_id="jollyoli93/KYLE",
     local_dir=BASE_DIR/ "Models"
 )
