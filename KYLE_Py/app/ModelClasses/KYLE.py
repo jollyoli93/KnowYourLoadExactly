@@ -7,7 +7,7 @@ import numpy as np
 from pathlib import Path
 
 from app.Results import Box_Result, Image_Result
-from app.image_tools import extract_coords, get_pairs, box_gating, corner_to_center, center_to_corners
+from app.Utils.image_tools import extract_coords, get_pairs, box_gating, corner_to_center, center_to_corners
 
 def cv_show(name, image):
     cv2.imshow(name, image)

@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
-from app.ModelCache import ModelCache
+from app.Utils.ModelCache import ModelCache
 from app.ModelClasses.Load_Classify import Load_Classify
 from app.ModelClasses.Roi_Predict import Roi_Predict
 
@@ -43,10 +43,15 @@ BASE_DIR = Path(__file__).resolve().parent
 @app.on_event("startup")
 def load_models():
     global detect_one
-    roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionAdam250.pth")
 
-    session = ModelCache.get_session()
-    classify_model = Load_Classify(session)
+    session_classify = ModelCache.get_classify_session()
+    session_roi = ModelCache.get_roi_session()
+
+    classify_model = Load_Classify(session_classify)
+    roi_predict = Roi_Predict(session_roi)
+    # roi_predict = Roi_Predict(BASE_DIR /"Models/crane_models/LoadRegressionAdam250.pth")
+
+
     detect_one = KYLE(
         objd_model=YOLO, 
         ob_weights=BASE_DIR / "Models/crane_models/yolov8_basic.pt", 

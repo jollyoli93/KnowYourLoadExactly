@@ -5,7 +5,7 @@ import numpy as np
 import onnxruntime as rt
 from PIL import Image
 
-from app.image_tools import image_processes
+from app.Utils.image_tools import image_processes
 
 def is_valid_image(path):
     print(path, "Hello")

@@ -1,36 +1,12 @@
 from pathlib import Path
-
+import onnxruntime as rt
 import numpy as np
-import torch
 from joblib import load
-
-from pathlib import Path
-import numpy as np
-import torch
-from joblib import load
-
-class MLP(torch.nn.Module):
-    def __init__(self, in_feat, out_feat, hidden) -> None:
-        super().__init__()
-        self.linear = torch.nn.Sequential(
-            torch.nn.Linear(in_feat, hidden),
-            torch.nn.ReLU(),
-            torch.nn.Linear(hidden, hidden),
-            torch.nn.ReLU(),
-            torch.nn.Linear(hidden, out_feat)
-        )
-
-    def forward(self, x):
-        x = self.linear(x)
-        return x
 
 
 class Roi_Predict:
-    def __init__(self, model_path, scaler_dir=None):
-        self.model = MLP(5, 2, 250)
-        state = torch.load(model_path, map_location="cpu", weights_only=True)
-        self.model.load_state_dict(state)
-        self.model.eval()
+    def __init__(self, session, scaler_dir=None):
+        self.session = session
 
         # Custom scaler
         if scaler_dir is None:
@@ -41,6 +17,15 @@ class Roi_Predict:
         self.feat_scaler = load(scaler_dir / "feat_scaler.pkl")
         self.target_scaler = load(scaler_dir / "target_scaler.pkl")
 
+    def _get_predition(self, inputs):
+        if self.session:
+            onnxruntime_input = {input_arg.name: input_value for input_arg, input_value in zip(self.session.get_inputs(), inputs)}
+
+            onnxruntime_outputs = self.session.run(None, onnxruntime_input)[0]
+            return onnxruntime_outputs
+        else:
+            raise ValueError("Session can't be empty")
+        
     def predict_load_roi(self, img_size, hook_coords):
         img_height, img_width = int(img_size[0]), int(img_size[1])
 
@@ -49,13 +34,10 @@ class Roi_Predict:
 
         hook_features = np.array([[x, y, w, h, yb_hook]], dtype=np.float32)
         xs_scaled = self.feat_scaler.transform(hook_features)
+        print(xs_scaled)
 
-        device = next(self.model.parameters()).device
-        xs_t = torch.from_numpy(xs_scaled).float().to(device)
+        pred_scaled = self._get_predition(xs_scaled)
         
-        with torch.no_grad():
-            pred_scaled = self.model(xs_t).cpu().numpy()
-
         pred_inv = self.target_scaler.inverse_transform(pred_scaled.reshape(1, -1))
         dx, dy = float(pred_inv[0, 0]), float(pred_inv[0, 1])
 

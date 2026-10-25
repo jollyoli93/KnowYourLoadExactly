@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/code/.venv/bin:$PATH"
 
 # Pre-download huggingface models during the build step
-RUN python app/huggingFaceModels.py
+RUN python app/Utils/huggingFaceModels.py
 
 # Switch to non-root user
 USER nonroot
